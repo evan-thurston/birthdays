@@ -1,17 +1,29 @@
 <script lang="ts">
-	import Navbar from '$lib/components/Header/Navbar.svelte';
-	// import { onMount } from 'svelte';
+	//types
+
+	//library
 	import '../app.css';
+	import { invalidate } from '$app/navigation';
+	import { onMount } from 'svelte';
 
-	let { children } = $props();
+	//components
+	import Navbar from '$lib/components/Header/Navbar.svelte';
 
-	// onMount(async () => {
-	// 	const { data: results, error: resultsError } = await data.supabase.from('birthdays').select();
+	//stores
+	let { data, children } = $props();
+	let { session, supabase } = $derived(data);
 
-	// 	if (!resultsError) {
-	// 		console.log('results', results);
-	// 	}
-	// });
+	//variables
+
+	onMount(() => {
+		const { data } = supabase.auth.onAuthStateChange((_, newSession) => {
+			if (newSession?.expires_at !== session?.expires_at) {
+				invalidate('supabase:auth');
+			}
+		});
+
+		return () => data.subscription.unsubscribe();
+	});
 </script>
 
 <Navbar />
